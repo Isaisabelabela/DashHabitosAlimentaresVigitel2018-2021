@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VIGITEL | Hábitos Alimentares</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0f1a; --surface: #13162a; --surface2: #1a1e35;
+      --border: #252a45; --text: #dde3f8; --muted: #6b7299;
+      --accent: #6c7ae0; --terra: #e07a6c; --verde: #6ce0c4; --amber: #e0c46c;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; }
+
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 280px; min-width: 280px; background: var(--surface);
+      border-right: 1px solid var(--border); padding: 28px 18px;
+      display: flex; flex-direction: column; gap: 20px;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+    .logo { font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .sb-label { font-size: 0.68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .divider { height: 1px; background: var(--border); }
+
+    select, .select-styled {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); border-radius: 10px; padding: 9px 12px;
+      font-family: 'Sora', sans-serif; font-size: 0.8rem; cursor: pointer;
+      appearance: none; outline: none;
+    }
+    select:focus { border-color: var(--accent); }
+
+    .chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      padding: 5px 11px; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--muted); font-size: 0.73rem;
+      cursor: pointer; transition: all .18s; user-select: none;
+    }
+    .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .chip:hover:not(.active) { border-color: var(--accent); color: var(--text); }
+
+    .sb-footer { margin-top: auto; color: var(--muted); font-size: 0.68rem; line-height: 1.7; }
+
+    /* ── Main ── */
+    .main { flex: 1; padding: 36px 32px; overflow-x: hidden; }
+    h1 { font-size: 1.8rem; font-weight: 700; }
+    .subtitle { color: var(--muted); font-size: 0.83rem; margin-top: 5px; margin-bottom: 32px; }
+
+    /* ── KPIs ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 36px; }
+    .kpi-card {
+      background: linear-gradient(135deg, var(--surface), var(--surface2));
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 18px 20px; text-align: center; transition: transform .2s;
+    }
+    .kpi-card:hover { transform: translateY(-3px); }
+    .kpi-label { color: var(--muted); font-size: 0.67rem; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 7px; }
+    .kpi-value { font-size: 1.9rem; font-weight: 700; }
+    .kpi-sub   { color: var(--muted); font-size: 0.68rem; margin-top: 3px; }
+
+    /* ── Seções ── */
+    .section-title {
+      font-size: 0.9rem; font-weight: 600; color: #c4cdf0;
+      border-left: 3px solid var(--accent); padding-left: 12px;
+      margin: 36px 0 14px; letter-spacing: .03em;
+    }
+    .chart-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px; margin-bottom: 18px;
+    }
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .chart-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+    /* ── Cruzamento builder ── */
+    .cross-controls {
+      display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 18px;
+    }
+    .cross-controls .ctrl-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+    .ctrl-label { font-size: 0.68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+    /* ── Tabela ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    thead th {
+      background: var(--surface2); color: var(--muted); font-size: 0.67rem;
+      letter-spacing: .06em; text-transform: uppercase; padding: 11px 14px;
+      text-align: left; border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 10px 14px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; }
+    .badge-negra    { background: rgba(108,122,224,.2); color: #9ba7f0; }
+    .badge-naoneg   { background: rgba(224,122,108,.2); color: #f0a99b; }
+    .badge-outros   { background: rgba(108,224,196,.2); color: #8cf0d6; }
+
+    .caption { font-size: .7rem; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+    footer { margin-top: 50px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: .68rem; }
+
+    /* ── Loading ── */
+    #loading { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 16px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 960px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: static; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .chart-row, .chart-row-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <span style="color:var(--muted);font-size:.85rem">Carregando dados VIGITEL…</span>
+</div>
+
+<div class="layout" id="app" style="display:none">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="logo">🥗 VIGITEL</div>
+    <div class="divider"></div>
+
+    <div>
+      <div class="sb-label">Indicador</div>
+      <select id="sel-indicador"></select>
+    </div>
+
+    <div>
+      <div class="sb-label">Anos</div>
+      <div class="chip-group" id="chips-ano"></div>
+    </div>
+
+    <div>
+      <div class="sb-label">Dimensão de comparação</div>
+      <select id="sel-dimensao">
+        <option value="raca_grupo">Raça/Cor (Negra × Não negra)</option>
+        <option value="raca_cat">Raça/Cor (detalhada)</option>
+        <option value="sexo">Sexo</option>
+        <option value="escolaridade">Escolaridade</option>
+        <option value="regiao">Região</option>
+        <option value="cidade_nome">Cidade</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+    <div class="sb-footer">
+      Base: VIGITEL Brasil<br>Ministério da Saúde<br>Dados ponderados (pesorake)
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main">
+    <h1>Hábitos Alimentares da População Negra</h1>
+    <p class="subtitle">Análise comparativa · VIGITEL Brasil – Ministério da Saúde · Dados ponderados por pesorake</p>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Negra</div><div class="kpi-value" id="kpi-negra">—</div><div class="kpi-sub">prevalência média</div></div>
+      <div class="kpi-card"><div class="kpi-label">Não Negra</div><div class="kpi-value" id="kpi-naoneg">—</div><div class="kpi-sub">prevalência média</div></div>
+      <div class="kpi-card"><div class="kpi-label">Gap racial</div><div class="kpi-value" id="kpi-gap">—</div><div class="kpi-sub">Negra − Não negra</div></div>
+      <div class="kpi-card"><div class="kpi-label">Indicador</div><div class="kpi-value" id="kpi-ind" style="font-size:1rem;padding-top:6px">—</div><div class="kpi-sub">selecionado</div></div>
+    </div>
+
+    <!-- Gráfico 1: Barras por dimensão -->
+    <div class="section-title" id="titulo-barras">Prevalência por grupo</div>
+    <div class="chart-box">
+      <div id="chart-barras" style="height:400px"></div>
+    </div>
+
+    <!-- Gráfico 2: Linhas — evolução temporal -->
+    <div class="section-title">Evolução temporal por grupo</div>
+    <div class="chart-box">
+      <div id="chart-linhas" style="height:380px"></div>
+    </div>
+
+    <!-- Gráfico 3: Cruzamento personalizado -->
+    <div class="section-title">🔀 Cruzamento personalizado</div>
+    <div class="chart-box">
+      <div class="cross-controls">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Indicador (eixo Y)</span>
+          <select id="cross-ind"></select>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Dimensão (grupos)</span>
+          <select id="cross-dim">
+            <option value="raca_grupo">Raça/Cor (Negra × Não negra)</option>
+            <option value="raca_cat">Raça/Cor (detalhada)</option>
+            <option value="sexo">Sexo</option>
+            <option value="escolaridade">Escolaridade</option>
+            <option value="regiao">Região</option>
+            <option value="cidade_nome">Cidade</option>
+          </select>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Ano</span>
+          <select id="cross-ano"></select>
+        </div>
+      </div>
+      <div id="chart-cross" style="height:400px"></div>
+    </div>
+
+    <!-- Heatmap: todos os indicadores × dimensão -->
+    <div class="section-title">Mapa de calor — todos os indicadores</div>
+    <div class="chart-box">
+      <div id="chart-heat" style="height:420px"></div>
+      <p class="caption">Prevalência (%) ponderada. Ano e dimensão seguem as seleções da sidebar.</p>
+    </div>
+
+    <!-- Tabela -->
+    <div class="section-title">Tabela de dados</div>
+    <div class="chart-box table-wrap">
+      <table>
+        <thead><tr>
+          <th>Indicador</th><th>Ano</th><th>Grupo</th><th>Prevalência (%)</th><th>N</th>
+        </tr></thead>
+        <tbody id="tabela-body"></tbody>
+      </table>
+    </div>
+
+    <footer>VIGITEL Brasil · Ministério da Saúde · Análise: TCC 2025</footer>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURAÇÃO
+// ═══════════════════════════════════════════════════════════════════════════
+
+const PALETA = [
+  "#6c7ae0","#e07a6c","#6ce0c4","#e0c46c","#b06ce0","#6cb8e0","#e0a66c","#6ce07a",
+  "#e06cb8","#c4e06c","#6ce0e0","#e06c6c"
+];
+
+const BG   = "#13162a";
+const BG2  = "#0d0f1a";
+const FONT = "#dde3f8";
+const GRID = "#1e2240";
+
+const LAYOUT_BASE = {
+  paper_bgcolor: BG, plot_bgcolor: BG,
+  font: { family: "Sora, sans-serif", color: FONT, size: 12 },
+  margin: { t: 30, b: 60, l: 50, r: 20 },
+  legend: { bgcolor: "rgba(0,0,0,0)" },
+  xaxis: { gridcolor: GRID, zerolinecolor: GRID },
+  yaxis: { gridcolor: GRID, zerolinecolor: GRID },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════════════════════════════════════════
+
+let DADOS = null;
+let estado = {
+  indicador: null,
+  anos: new Set(),
+  dimensao: "raca_grupo",
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CARREGAMENTO DOS DADOS
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function carregarDados() {
+  try {
+    const resp = await fetch("dados.json");
+    if (!resp.ok) throw new Error("dados.json não encontrado");
+    DADOS = await resp.json();
+  } catch (e) {
+    // Fallback: dados de exemplo embutidos para demonstração
+    console.warn("dados.json não encontrado, usando dados de exemplo.");
+    DADOS = getDadosExemplo();
+  }
+  inicializar();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INICIALIZAÇÃO DA UI
+// ═══════════════════════════════════════════════════════════════════════════
+
+function inicializar() {
+  const anos = DADOS.anos;
+  const inds = DADOS.indicadores;
+
+  // Chips de ano
+  const chipContainer = document.getElementById("chips-ano");
+  anos.forEach(ano => {
+    const chip = document.createElement("div");
+    chip.className = "chip active";
+    chip.textContent = ano;
+    chip.dataset.ano = ano;
+    chip.onclick = () => {
+      chip.classList.toggle("active");
+      if (estado.anos.has(ano)) estado.anos.delete(ano);
+      else estado.anos.add(ano);
+      if (estado.anos.size === 0) { chip.classList.add("active"); estado.anos.add(ano); }
+      render();
+    };
+    chipContainer.appendChild(chip);
+    estado.anos.add(ano);
+  });
+
+  // Selects de indicador
+  [document.getElementById("sel-indicador"), document.getElementById("cross-ind")].forEach(sel => {
+    Object.entries(inds).forEach(([k, v]) => {
+      const opt = document.createElement("option");
+      opt.value = k; opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  });
+  estado.indicador = Object.keys(inds)[0];
+
+  // Select de ano para cruzamento
+  const crossAno = document.getElementById("cross-ano");
+  anos.forEach(ano => {
+    const opt = document.createElement("option");
+    opt.value = ano; opt.textContent = ano;
+    crossAno.appendChild(opt);
+  });
+
+  // Eventos
+  document.getElementById("sel-indicador").addEventListener("change", e => {
+    estado.indicador = e.target.value;
+    render();
+  });
+  document.getElementById("sel-dimensao").addEventListener("change", e => {
+    estado.dimensao = e.target.value;
+    render();
+  });
+  ["cross-ind","cross-dim","cross-ano"].forEach(id => {
+    document.getElementById(id).addEventListener("change", renderCruzamento);
+  });
+
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPERS DE DADOS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function getDadosParaDim(indicador, dimensao, ano) {
+  try {
+    return DADOS.cruzamentos[indicador].por_ano[String(ano)][dimensao].dados;
+  } catch { return []; }
+}
+
+function corPorGrupo(grupo, idx) {
+  if (grupo === "Negra")      return "#6c7ae0";
+  if (grupo === "Não negra")  return "#e07a6c";
+  return PALETA[idx % PALETA.length];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDERIZAÇÃO
+// ═══════════════════════════════════════════════════════════════════════════
+
+function render() {
+  const ind = estado.indicador;
+  const dim = estado.dimensao;
+  const anos = [...estado.anos].sort();
+  const indLabel = DADOS.indicadores[ind] || ind;
+
+  document.getElementById("titulo-barras").textContent =
+    `${indLabel} — por ${document.getElementById("sel-dimensao").selectedOptions[0].text}`;
+  document.getElementById("kpi-ind").textContent = indLabel;
+
+  atualizarKPIs(ind, anos);
+  plotBarras(ind, dim, anos, indLabel);
+  plotLinhas(ind, dim, anos, indLabel);
+  plotHeatmap(dim, anos);
+  renderCruzamento();
+  atualizarTabela(ind, dim, anos);
+}
+
+// ── KPIs ──────────────────────────────────────────────────────────────────
+function atualizarKPIs(ind, anos) {
+  let negra = [], naoneg = [];
+  anos.forEach(ano => {
+    const d = getDadosParaDim(ind, "raca_grupo", ano);
+    d.forEach(r => {
+      if (r.grupo === "Negra")     negra.push(r.prevalencia);
+      if (r.grupo === "Não negra") naoneg.push(r.prevalencia);
+    });
+  });
+
+  const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const mN  = avg(negra);
+  const mNN = avg(naoneg);
+  const gap = (mN !== null && mNN !== null) ? mN - mNN : null;
+
+  document.getElementById("kpi-negra").textContent  = mN  !== null ? mN.toFixed(1)+"%" : "—";
+  document.getElementById("kpi-naoneg").textContent = mNN !== null ? mNN.toFixed(1)+"%" : "—";
+  const kpiGap = document.getElementById("kpi-gap");
+  if (gap !== null) {
+    kpiGap.textContent = (gap>=0?"+":"")+gap.toFixed(1)+"%";
+    kpiGap.style.color = gap >= 0 ? "#6ce0c4" : "#e07a6c";
+  } else { kpiGap.textContent = "—"; }
+}
+
+// ── Barras ────────────────────────────────────────────────────────────────
+function plotBarras(ind, dim, anos, indLabel) {
+  const grupos = new Set();
+  anos.forEach(ano => getDadosParaDim(ind, dim, ano).forEach(r => grupos.add(r.grupo)));
+
+  const traces = [];
+  let gi = 0;
+  grupos.forEach(grupo => {
+    const xs = [], ys = [], ns = [];
+    anos.forEach(ano => {
+      const row = getDadosParaDim(ind, dim, ano).find(r => r.grupo === grupo);
+      xs.push(String(ano));
+      ys.push(row ? row.prevalencia : null);
+      ns.push(row ? row.n : 0);
+    });
+    traces.push({
+      type: "bar", name: grupo,
+      x: xs, y: ys,
+      text: ys.map(v => v !== null ? v.toFixed(1)+"%" : ""),
+      textposition: "outside",
+      marker: { color: corPorGrupo(grupo, gi) },
+      hovertemplate: "<b>%{x}</b><br>"+grupo+": %{y:.1f}%<extra></extra>",
+    });
+    gi++;
+  });
+
+  Plotly.react("chart-barras", traces, {
+    ...LAYOUT_BASE,
+    barmode: "group",
+    yaxis: { ...LAYOUT_BASE.yaxis, title: "Prevalência (%)" },
+    xaxis: { ...LAYOUT_BASE.xaxis, title: "Ano" },
+    legend: { orientation: "h", y: -0.2 },
+    margin: { t: 30, b: 80, l: 55, r: 20 },
+  }, { responsive: true });
+}
+
+// ── Linhas ────────────────────────────────────────────────────────────────
+function plotLinhas(ind, dim, anos, indLabel) {
+  const gruposMap = {};
+  anos.forEach(ano => {
+    getDadosParaDim(ind, dim, ano).forEach(r => {
+      if (!gruposMap[r.grupo]) gruposMap[r.grupo] = {};
+      gruposMap[r.grupo][ano] = r.prevalencia;
+    });
+  });
+
+  const traces = Object.entries(gruposMap).map(([grupo, vals], gi) => ({
+    type: "scatter", mode: "lines+markers+text",
+    name: grupo,
+    x: anos.map(String),
+    y: anos.map(a => vals[a] ?? null),
+    text: anos.map(a => vals[a] !== undefined ? vals[a].toFixed(1)+"%" : ""),
+    textposition: "top center",
+    line: { width: 2.5, color: corPorGrupo(grupo, gi) },
+    marker: { size: 9, color: corPorGrupo(grupo, gi) },
+    hovertemplate: "<b>%{x}</b><br>"+grupo+": %{y:.1f}%<extra></extra>",
+  }));
+
+  Plotly.react("chart-linhas", traces, {
+    ...LAYOUT_BASE,
+    yaxis: { ...LAYOUT_BASE.yaxis, title: "Prevalência (%)" },
+    xaxis: { ...LAYOUT_BASE.xaxis, title: "Ano", tickmode: "array", tickvals: anos.map(String) },
+    legend: { orientation: "h", y: -0.2 },
+    margin: { t: 30, b: 80, l: 55, r: 20 },
+  }, { responsive: true });
+}
+
+// ── Cruzamento personalizado ──────────────────────────────────────────────
+function renderCruzamento() {
+  const ind = document.getElementById("cross-ind").value;
+  const dim = document.getElementById("cross-dim").value;
+  const ano = document.getElementById("cross-ano").value;
+
+  const dados = getDadosParaDim(ind, dim, ano);
+  if (!dados.length) { Plotly.purge("chart-cross"); return; }
+
+  const sorted = [...dados].sort((a,b) => b.prevalencia - a.prevalencia);
+
+  Plotly.react("chart-cross", [{
+    type: "bar", orientation: "h",
+    x: sorted.map(d => d.prevalencia),
+    y: sorted.map(d => d.grupo),
+    text: sorted.map(d => d.prevalencia.toFixed(1)+"%"),
+    textposition: "outside",
+    marker: { color: sorted.map((d,i) => corPorGrupo(d.grupo, i)) },
+    hovertemplate: "<b>%{y}</b>: %{x:.1f}%<extra></extra>",
+  }], {
+    ...LAYOUT_BASE,
+    xaxis: { ...LAYOUT_BASE.xaxis, title: "Prevalência (%)" },
+    yaxis: { ...LAYOUT_BASE.yaxis, automargin: true },
+    margin: { t: 20, b: 50, l: 160, r: 60 },
+    height: Math.max(300, sorted.length * 45 + 80),
+  }, { responsive: true });
+}
+
+// ── Heatmap ───────────────────────────────────────────────────────────────
+function plotHeatmap(dim, anos) {
+  const inds = Object.keys(DADOS.indicadores);
+  const labels = Object.values(DADOS.indicadores);
+
+  // Usa o último ano selecionado para o heatmap
+  const ano = anos[anos.length - 1];
+
+  const grupos = new Set();
+  inds.forEach(ind => getDadosParaDim(ind, dim, ano).forEach(r => grupos.add(r.grupo)));
+  const gruposArr = [...grupos];
+
+  const z = inds.map(ind => {
+    const row = getDadosParaDim(ind, dim, ano);
+    return gruposArr.map(g => {
+      const r = row.find(d => d.grupo === g);
+      return r ? r.prevalencia : null;
+    });
+  });
+
+  Plotly.react("chart-heat", [{
+    type: "heatmap",
+    z, x: gruposArr, y: labels,
+    colorscale: [[0,"#0d0f1a"],[0.5,"#6c7ae0"],[1,"#e07a6c"]],
+    text: z.map(row => row.map(v => v !== null ? v.toFixed(1)+"%" : "")),
+    texttemplate: "%{text}",
+    hovertemplate: "<b>%{y}</b><br>%{x}: %{z:.1f}%<extra></extra>",
+    colorbar: { title: { text: "%" }, tickfont: { color: FONT }, titlefont: { color: FONT } },
+  }], {
+    ...LAYOUT_BASE,
+    margin: { t: 20, b: 80, l: 200, r: 60 },
+    xaxis: { ...LAYOUT_BASE.xaxis, tickangle: -30 },
+  }, { responsive: true });
+}
+
+// ── Tabela ────────────────────────────────────────────────────────────────
+function atualizarTabela(ind, dim, anos) {
+  const indLabel = DADOS.indicadores[ind] || ind;
+  const linhas = [];
+  anos.forEach(ano => {
+    getDadosParaDim(ind, dim, ano).forEach(r => {
+      linhas.push({ ind: indLabel, ano, grupo: r.grupo, prev: r.prevalencia, n: r.n });
+    });
+  });
+  linhas.sort((a,b) => a.grupo.localeCompare(b.grupo) || a.ano - b.ano);
+
+  const badgeClass = g =>
+    g === "Negra" ? "badge-negra" : g === "Não negra" ? "badge-naoneg" : "badge-outros";
+
+  document.getElementById("tabela-body").innerHTML = linhas.map(l => `
+    <tr>
+      <td>${l.ind}</td>
+      <td>${l.ano}</td>
+      <td><span class="badge ${badgeClass(l.grupo)}">${l.grupo}</span></td>
+      <td>${l.prev.toFixed(1)}%</td>
+      <td>${l.n.toLocaleString("pt-BR")}</td>
+    </tr>`).join("");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DADOS DE EXEMPLO (fallback sem servidor)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function getDadosExemplo() {
+  const inds = {
+    "hortareg":  "Hortaliças ≥5x/sem",
+    "frutareg":  "Frutas ≥5x/sem",
+    "flvreg":    "Frutas e hortaliças ≥5x/sem",
+    "refritl5":  "Refrigerante ≥5x/sem",
+    "obesid":    "Obesidade",
+    "excpeso":   "Excesso de peso",
+    "diab":      "Diabetes",
+    "hart":      "Hipertensão",
+    "inativo":   "Inatividade física",
+  };
+
+  const cruzamentos = {};
+
+  const exemplos = {
+    "hortareg":  { "Negra":42.9,"Não negra":52.1,"Masculino":38.1,"Feminino":55.2,"0 a 8 anos":38.2,"9 a 11 anos":44.1,"12 anos ou mais":60.3,"Norte":40.1,"Nordeste":39.8,"Sudeste":53.2,"Sul":58.1,"Centro-Oeste":44.0 },
+    "frutareg":  { "Negra":58.7,"Não negra":62.8,"Masculino":52.0,"Feminino":66.1,"0 a 8 anos":53.2,"9 a 11 anos":59.4,"12 anos ou mais":70.1,"Norte":54.3,"Nordeste":57.8,"Sudeste":63.4,"Sul":67.2,"Centro-Oeste":60.1 },
+    "flvreg":    { "Negra":29.8,"Não negra":37.9,"Masculino":24.3,"Feminino":40.6,"0 a 8 anos":25.1,"9 a 11 anos":30.2,"12 anos ou mais":46.3,"Norte":26.1,"Nordeste":27.4,"Sudeste":38.2,"Sul":43.1,"Centro-Oeste":31.0 },
+    "refritl5":  { "Negra":14.9,"Não negra":13.9,"Masculino":18.2,"Feminino":12.1,"0 a 8 anos":16.3,"9 a 11 anos":15.8,"12 anos ou mais":9.4,"Norte":16.1,"Nordeste":15.4,"Sudeste":13.2,"Sul":11.8,"Centro-Oeste":14.9 },
+    "obesid":    { "Negra":19.8,"Não negra":18.1,"Masculino":17.2,"Feminino":20.8,"0 a 8 anos":20.1,"9 a 11 anos":19.4,"12 anos ou mais":15.2,"Norte":18.1,"Nordeste":19.2,"Sudeste":19.4,"Sul":22.1,"Centro-Oeste":18.8 },
+    "excpeso":   { "Negra":50.2,"Não negra":51.8,"Masculino":54.1,"Feminino":48.6,"0 a 8 anos":52.4,"9 a 11 anos":50.8,"12 anos ou mais":47.3,"Norte":48.1,"Nordeste":49.2,"Sudeste":52.4,"Sul":56.1,"Centro-Oeste":51.8 },
+    "diab":      { "Negra":9.2,"Não negra":8.1,"Masculino":8.4,"Feminino":9.6,"0 a 8 anos":11.2,"9 a 11 anos":8.4,"12 anos ou mais":5.2,"Norte":8.1,"Nordeste":8.8,"Sudeste":9.4,"Sul":8.2,"Centro-Oeste":9.1 },
+    "hart":      { "Negra":24.8,"Não negra":21.9,"Masculino":20.4,"Feminino":25.9,"0 a 8 anos":28.1,"9 a 11 anos":22.4,"12 anos ou mais":15.8,"Norte":22.1,"Nordeste":23.8,"Sudeste":23.4,"Sul":22.8,"Centro-Oeste":24.1 },
+    "inativo":   { "Negra":62.1,"Não negra":58.4,"Masculino":52.8,"Feminino":66.4,"0 a 8 anos":68.1,"9 a 11 anos":62.4,"12 anos ou mais":48.2,"Norte":66.1,"Nordeste":64.8,"Sudeste":57.4,"Sul":55.2,"Centro-Oeste":60.1 },
+  };
+
+  const dims = {
+    "raca_grupo":   ["Negra","Não negra"],
+    "sexo":         ["Masculino","Feminino"],
+    "escolaridade": ["0 a 8 anos","9 a 11 anos","12 anos ou mais"],
+    "regiao":       ["Norte","Nordeste","Sudeste","Sul","Centro-Oeste"],
+  };
+
+  const anos = [2018, 2021];
+  const variacao = (v, fator) => Math.max(0, v + (Math.random()-0.5)*fator);
+
+  Object.entries(inds).forEach(([ind, label]) => {
+    cruzamentos[ind] = { label, por_ano: {}, dimensoes: Object.keys(dims) };
+    anos.forEach((ano, ai) => {
+      cruzamentos[ind].por_ano[String(ano)] = {};
+      Object.entries(dims).forEach(([dim, grupos]) => {
+        cruzamentos[ind].por_ano[String(ano)][dim] = {
+          label: dim,
+          dados: grupos.map(g => ({
+            grupo: g,
+            prevalencia: +(variacao(exemplos[ind]?.[g] ?? 20, ai * 3)).toFixed(1),
+            n: Math.round(5000 + Math.random()*15000),
+          }))
+        };
+      });
+    });
+  });
+
+  return { anos, indicadores: inds, cruzamentos };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════════════════
+carregarDados();
+</script>
+</body>
+</html>

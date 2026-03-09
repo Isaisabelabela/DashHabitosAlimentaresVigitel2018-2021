@@ -110,6 +110,32 @@
     .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+
+    /* ── Abas sidebar ── */
+    .sb-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .sb-tab {
+      flex: 1; padding: 8px 0; text-align: center; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+      cursor: pointer; border-bottom: 2px solid transparent; transition: all .18s;
+    }
+    .sb-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .sb-tab:hover:not(.active) { color: var(--text); }
+    .sb-panel { display: none; flex-direction: column; gap: 18px; }
+    .sb-panel.active { display: flex; }
+
+    /* ── Painel sobre ── */
+    .sobre-bloco {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+    }
+    .sobre-titulo { font-size: 0.68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .sobre-texto { font-size: 0.75rem; color: var(--muted); line-height: 1.65; }
+    .sobre-tag {
+      display: inline-block; padding: 3px 9px; border-radius: 10px;
+      background: rgba(108,122,224,.15); color: #9ba7f0;
+      font-size: 0.65rem; font-weight: 600; margin: 3px 2px 0;
+    }
+
     @media (max-width: 960px) {
       .layout { flex-direction: column; }
       .sidebar { width: 100%; height: auto; position: static; }
@@ -130,34 +156,81 @@
   <!-- ══ SIDEBAR ══ -->
   <aside class="sidebar">
     <div class="logo">🥗 VIGITEL</div>
-    <div class="divider"></div>
 
-    <div>
-      <div class="sb-label">Indicador</div>
-      <select id="sel-indicador"></select>
+    <!-- Abas -->
+    <div class="sb-tabs">
+      <div class="sb-tab active" onclick="trocarAba('filtros')">Filtros</div>
+      <div class="sb-tab" onclick="trocarAba('sobre')">Sobre</div>
     </div>
 
-    <div>
-      <div class="sb-label">Anos</div>
-      <div class="chip-group" id="chips-ano"></div>
+    <!-- Painel Filtros -->
+    <div class="sb-panel active" id="painel-filtros">
+      <div>
+        <div class="sb-label">Indicador</div>
+        <select id="sel-indicador"></select>
+      </div>
+      <div>
+        <div class="sb-label">Anos</div>
+        <div class="chip-group" id="chips-ano"></div>
+      </div>
+      <div>
+        <div class="sb-label">Dimensão de comparação</div>
+        <select id="sel-dimensao">
+          <option value="raca_grupo">Raça/Cor (Negra × Não negra)</option>
+          <option value="raca_cat">Raça/Cor (detalhada)</option>
+          <option value="sexo">Sexo</option>
+          <option value="escolaridade">Escolaridade</option>
+          <option value="regiao">Região</option>
+          <option value="cidade_nome">Cidade</option>
+        </select>
+      </div>
+      <div class="divider"></div>
+      <div class="sb-footer">
+        Base: VIGITEL Brasil<br>Ministério da Saúde<br>Dados ponderados (pesorake)
+      </div>
     </div>
 
-    <div>
-      <div class="sb-label">Dimensão de comparação</div>
-      <select id="sel-dimensao">
-        <option value="raca_grupo">Raça/Cor (Negra × Não negra)</option>
-        <option value="raca_cat">Raça/Cor (detalhada)</option>
-        <option value="sexo">Sexo</option>
-        <option value="escolaridade">Escolaridade</option>
-        <option value="regiao">Região</option>
-        <option value="cidade_nome">Cidade</option>
-      </select>
+    <!-- Painel Sobre -->
+    <div class="sb-panel" id="painel-sobre">
+      <div class="sobre-bloco">
+        <div class="sobre-titulo">📋 Sobre o TCC</div>
+        <div class="sobre-texto">
+          Este dashboard faz parte de um Trabalho de Conclusão de Curso em Mineração de Dados, com foco na análise de desigualdades raciais nos hábitos alimentares da população brasileira.
+        </div>
+      </div>
+      <div class="sobre-bloco">
+        <div class="sobre-titulo">🎯 Objetivo</div>
+        <div class="sobre-texto">
+          Comparar indicadores de saúde e alimentação entre a população negra (preta + parda) e não negra, identificando disparidades por escolaridade, sexo e região no Brasil.
+        </div>
+      </div>
+      <div class="sobre-bloco">
+        <div class="sobre-titulo">📊 Fonte de dados</div>
+        <div class="sobre-texto">
+          VIGITEL Brasil — Vigilância de Fatores de Risco e Proteção para Doenças Crônicas por Inquérito Telefônico.<br><br>
+          Ministério da Saúde · Anos analisados: 2018 e 2021.<br><br>
+          Prevalências calculadas com peso amostral (pesorake).
+        </div>
+      </div>
+      <div class="sobre-bloco">
+        <div class="sobre-titulo">🛠 Tecnologias</div>
+        <div class="sobre-texto">
+          <span class="sobre-tag">Python</span>
+          <span class="sobre-tag">Pandas</span>
+          <span class="sobre-tag">Plotly.js</span>
+          <span class="sobre-tag">HTML/JS</span>
+          <span class="sobre-tag">GitHub Pages</span>
+        </div>
+      </div>
+      <div class="sobre-bloco">
+        <div class="sobre-titulo">👩‍💻 Autora</div>
+        <div class="sobre-texto">
+          Isabela<br>
+          <span style="color:var(--accent);font-size:0.72rem">isaisabelabela.github.io</span>
+        </div>
+      </div>
     </div>
 
-    <div class="divider"></div>
-    <div class="sb-footer">
-      Base: VIGITEL Brasil<br>Ministério da Saúde<br>Dados ponderados (pesorake)
-    </div>
   </aside>
 
   <!-- ══ MAIN ══ -->
@@ -217,6 +290,35 @@
     <div class="chart-box">
       <div id="chart-heat" style="height:420px"></div>
       <p class="caption">Prevalência (%) ponderada. Ano e dimensão seguem as seleções da sidebar.</p>
+    </div>
+
+
+    <!-- IMC -->
+    <div class="section-title">📊 IMC médio por grupo</div>
+    <div class="chart-row">
+      <div class="chart-box"><div id="chart-imc-barras" style="height:360px"></div></div>
+      <div class="chart-box"><div id="chart-imc-linhas" style="height:360px"></div></div>
+    </div>
+    <div class="chart-box">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end">
+        <div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:160px">
+          <span class="ctrl-label">Dimensão (IMC)</span>
+          <select id="imc-dim" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-family:Sora,sans-serif;font-size:0.8rem;outline:none">
+            <option value="raca_grupo">Raça/Cor (Negra x Não negra)</option>
+            <option value="raca_cat">Raça/Cor (detalhada)</option>
+            <option value="sexo">Sexo</option>
+            <option value="escolaridade">Escolaridade</option>
+            <option value="regiao">Região</option>
+            <option value="cidade_nome">Cidade</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px">
+          <span class="ctrl-label">Ano (IMC)</span>
+          <select id="imc-ano" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-family:Sora,sans-serif;font-size:0.8rem;outline:none"></select>
+        </div>
+      </div>
+      <div id="chart-imc-cross" style="height:380px"></div>
+      <p class="caption">IMC médio ponderado pelo pesorake. Referência OMS: abaixo do peso &lt;18,5 · normal 18,5–24,9 · sobrepeso 25–29,9 · obesidade ≥30.</p>
     </div>
 
     <!-- Tabela -->
@@ -330,6 +432,21 @@ function inicializar() {
     crossAno.appendChild(opt);
   });
 
+  // Select de ano para IMC
+  const imcAno = document.getElementById("imc-ano");
+  anos.forEach(ano => {
+    const opt = document.createElement("option");
+    opt.value = ano; opt.textContent = ano;
+    imcAno.appendChild(opt);
+  });
+
+  // Eventos IMC
+  document.getElementById("imc-dim").addEventListener("change", () => {
+    const anos = [...estado.anos].sort();
+    plotIMCBarras(anos); plotIMCLinhas(anos); plotIMCCross();
+  });
+  document.getElementById("imc-ano").addEventListener("change", plotIMCCross);
+
   // Eventos
   document.getElementById("sel-indicador").addEventListener("change", e => {
     estado.indicador = e.target.value;
@@ -385,6 +502,9 @@ function render() {
   plotHeatmap(dim, anos);
   renderCruzamento();
   atualizarTabela(ind, dim, anos);
+  plotIMCBarras(anos);
+  plotIMCLinhas(anos);
+  plotIMCCross();
 }
 
 // ── KPIs ──────────────────────────────────────────────────────────────────
@@ -624,7 +744,148 @@ function getDadosExemplo() {
     });
   });
 
-  return { anos, indicadores: inds, cruzamentos };
+  // IMC exemplo
+  const imcExemplo = {
+    "Negra": 27.8, "Não negra": 26.9, "Masculino": 26.4, "Feminino": 27.8,
+    "0 a 8 anos": 28.1, "9 a 11 anos": 27.2, "12 anos ou mais": 25.8,
+    "Norte": 26.8, "Nordeste": 27.1, "Sudeste": 27.4, "Sul": 27.8, "Centro-Oeste": 27.2
+  };
+  const cruzamentosCont = { imc: { label: "IMC médio", unidade: "kg/m²", por_ano: {}, dimensoes: Object.keys(dims) } };
+  anos.forEach((ano, ai) => {
+    cruzamentosCont.imc.por_ano[String(ano)] = {};
+    Object.entries(dims).forEach(([dim, grupos]) => {
+      cruzamentosCont.imc.por_ano[String(ano)][dim] = {
+        label: dim,
+        dados: grupos.map(g => ({
+          grupo: g,
+          valor: +(variacao(imcExemplo[g] ?? 27, ai * 0.5)).toFixed(1),
+          n: Math.round(5000 + Math.random()*15000),
+        }))
+      };
+    });
+  });
+
+  return { anos, indicadores: inds, indicadores_continuos: { imc: "IMC médio" }, cruzamentos, cruzamentos_continuos: cruzamentosCont };
+}
+
+
+// ── IMC ───────────────────────────────────────────────────────────────────
+function getDadosIMC(dim, ano) {
+  try {
+    return DADOS.cruzamentos_continuos.imc.por_ano[String(ano)][dim].dados;
+  } catch { return []; }
+}
+
+function plotIMCBarras(anos) {
+  const dim = document.getElementById('imc-dim').value;
+  const grupos = new Set();
+  anos.forEach(ano => getDadosIMC(dim, ano).forEach(r => grupos.add(r.grupo)));
+
+  const traces = [];
+  let gi = 0;
+  grupos.forEach(grupo => {
+    traces.push({
+      type: 'bar', name: grupo,
+      x: anos.map(String),
+      y: anos.map(ano => { const r = getDadosIMC(dim, ano).find(d => d.grupo === grupo); return r ? r.valor : null; }),
+      text: anos.map(ano => { const r = getDadosIMC(dim, ano).find(d => d.grupo === grupo); return r ? r.valor.toFixed(1) : ''; }),
+      textposition: 'outside',
+      marker: { color: corPorGrupo(grupo, gi) },
+      hovertemplate: '<b>%{x}</b><br>' + grupo + ': %{y:.1f} kg/m²<extra></extra>',
+    });
+    gi++;
+  });
+
+  Plotly.react('chart-imc-barras', traces, {
+    ...LAYOUT_BASE,
+    barmode: 'group',
+    title: { text: 'IMC médio por ano', font: { size: 13 } },
+    yaxis: { ...LAYOUT_BASE.yaxis, title: 'IMC (kg/m²)', range: [20, 32] },
+    shapes: [
+      { type: 'line', x0: -0.5, x1: anos.length - 0.5, y0: 25, y1: 25, line: { color: '#e0c46c', dash: 'dot', width: 1.5 } },
+      { type: 'line', x0: -0.5, x1: anos.length - 0.5, y0: 30, y1: 30, line: { color: '#e07a6c', dash: 'dot', width: 1.5 } },
+    ],
+    annotations: [
+      { x: anos.length - 0.5, y: 25, xref: 'x', yref: 'y', text: 'Sobrepeso', showarrow: false, font: { color: '#e0c46c', size: 10 }, xanchor: 'right' },
+      { x: anos.length - 0.5, y: 30, xref: 'x', yref: 'y', text: 'Obesidade', showarrow: false, font: { color: '#e07a6c', size: 10 }, xanchor: 'right' },
+    ],
+    legend: { orientation: 'h', y: -0.2 },
+    margin: { t: 50, b: 80, l: 60, r: 20 },
+  }, { responsive: true });
+}
+
+function plotIMCLinhas(anos) {
+  const dim = document.getElementById('imc-dim').value;
+  const gruposMap = {};
+  anos.forEach(ano => {
+    getDadosIMC(dim, ano).forEach(r => {
+      if (!gruposMap[r.grupo]) gruposMap[r.grupo] = {};
+      gruposMap[r.grupo][ano] = r.valor;
+    });
+  });
+
+  const traces = Object.entries(gruposMap).map(([grupo, vals], gi) => ({
+    type: 'scatter', mode: 'lines+markers+text',
+    name: grupo,
+    x: anos.map(String),
+    y: anos.map(a => vals[a] ?? null),
+    text: anos.map(a => vals[a] !== undefined ? vals[a].toFixed(1) : ''),
+    textposition: 'top center',
+    line: { width: 2.5, color: corPorGrupo(grupo, gi) },
+    marker: { size: 9, color: corPorGrupo(grupo, gi) },
+    hovertemplate: '<b>%{x}</b><br>' + grupo + ': %{y:.1f} kg/m²<extra></extra>',
+  }));
+
+  Plotly.react('chart-imc-linhas', traces, {
+    ...LAYOUT_BASE,
+    title: { text: 'Evolução do IMC médio', font: { size: 13 } },
+    yaxis: { ...LAYOUT_BASE.yaxis, title: 'IMC (kg/m²)', range: [20, 32] },
+    xaxis: { ...LAYOUT_BASE.xaxis, title: 'Ano', tickmode: 'array', tickvals: anos.map(String) },
+    shapes: [
+      { type: 'line', x0: 0, x1: 1, y0: 25, y1: 25, xref: 'paper', line: { color: '#e0c46c', dash: 'dot', width: 1.5 } },
+      { type: 'line', x0: 0, x1: 1, y0: 30, y1: 30, xref: 'paper', line: { color: '#e07a6c', dash: 'dot', width: 1.5 } },
+    ],
+    legend: { orientation: 'h', y: -0.2 },
+    margin: { t: 50, b: 80, l: 60, r: 20 },
+  }, { responsive: true });
+}
+
+function plotIMCCross() {
+  const dim = document.getElementById('imc-dim').value;
+  const ano = document.getElementById('imc-ano').value;
+  const dados = getDadosIMC(dim, ano);
+  if (!dados.length) return;
+
+  const sorted = [...dados].sort((a, b) => b.valor - a.valor);
+  const cores = sorted.map(d => d.valor >= 30 ? '#e07a6c' : d.valor >= 25 ? '#e0c46c' : '#6ce0c4');
+
+  Plotly.react('chart-imc-cross', [{
+    type: 'bar', orientation: 'h',
+    x: sorted.map(d => d.valor),
+    y: sorted.map(d => d.grupo),
+    text: sorted.map(d => d.valor.toFixed(1) + ' kg/m²'),
+    textposition: 'outside',
+    marker: { color: cores },
+    hovertemplate: '<b>%{y}</b>: %{x:.1f} kg/m²<extra></extra>',
+  }], {
+    ...LAYOUT_BASE,
+    xaxis: { ...LAYOUT_BASE.xaxis, title: 'IMC médio (kg/m²)', range: [18, 34] },
+    yaxis: { ...LAYOUT_BASE.yaxis, automargin: true },
+    shapes: [
+      { type: 'line', x0: 25, x1: 25, y0: -0.5, y1: sorted.length - 0.5, line: { color: '#e0c46c', dash: 'dot', width: 1.5 } },
+      { type: 'line', x0: 30, x1: 30, y0: -0.5, y1: sorted.length - 0.5, line: { color: '#e07a6c', dash: 'dot', width: 1.5 } },
+    ],
+    margin: { t: 20, b: 50, l: 160, r: 80 },
+    height: Math.max(300, sorted.length * 45 + 80),
+  }, { responsive: true });
+}
+
+function trocarAba(aba) {
+  document.querySelectorAll('.sb-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && aba === 'filtros') || (i === 1 && aba === 'sobre'));
+  });
+  document.getElementById('painel-filtros').classList.toggle('active', aba === 'filtros');
+  document.getElementById('painel-sobre').classList.toggle('active', aba === 'sobre');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
